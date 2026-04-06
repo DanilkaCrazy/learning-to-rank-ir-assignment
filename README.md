@@ -117,20 +117,7 @@ Execute all cells. The notebook will:
 
 ---
 
-## 📁 Repository Structure
 
-```
-learning-to-rank-ir-assignment/
-├── learning_to_rank_catboost.ipynb   # Main notebook with all experiments
-├── data/                              # Place datasets here (not tracked by git)
-│   ├── MQ2007.rar
-│   ├── imat2009_train_new.txt
-│   ├── imat2009_test_new.txt
-│   ├── wikIR1k/
-│   └── mirage/
-├── README.md
-└── LICENSE
-```
 
 ---
 
@@ -148,12 +135,7 @@ learning-to-rank-ir-assignment/
 
 Danil Vishnyakov – HA3 assignment for Information Retrieval course.
 
----
 
-## 📄 License
-
-MIT – feel free to use and adapt.
-```
 
 
 
