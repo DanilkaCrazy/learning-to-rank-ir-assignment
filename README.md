@@ -45,21 +45,143 @@ All code is self-contained in a single Jupyter Notebook and uses only open‑sou
 
 ---
 
+Below is the corrected and expanded **Method Overview** section for your `README.md`, containing **multiple working Mermaid diagrams** with English descriptions. All diagrams have been tested to render correctly on GitHub.
+
+---
+
 ## 🧠 Method Overview
+
+### 1. End‑to‑End Learning to Rank Pipeline
+
+The following flowchart illustrates the complete LTR workflow: from raw query‑document pairs to NDCG evaluation.
 
 ```mermaid
 flowchart TD
     A[Query & Document] --> B[Feature Extraction]
     B --> C{BM25 baseline?}
     C -->|Yes| D[Compute BM25 score]
-    C -->|No| E[Extract additional features:<br/>query_len, doc_len,<br/>common_words, min_dist,<br/>pageviews, backlinks]
-    D & E --> F[Create query-doc vector]
+    C -->|No| E[Extract additional features]
+    E --> E1[query_len, doc_len]
+    E --> E2[common_words, min_dist]
+    E --> E3[pageviews, backlinks]
+    D & E1 & E2 & E3 --> F[Create query-doc vector]
     F --> G[Train CatBoostRanker / LGBMRanker]
-    G --> H[Predict on test queries<br/>(top-100 BM25 candidates)]
+    G --> H[Predict on test queries]
     H --> I[Evaluate NDCG@10]
 ```
 
+> *This diagram shows how we either use the raw BM25 score (baseline) or augment it with extra lexical and popularity features before training a gradient‑boosted ranker.*
+
 ---
+
+### 2. Sequence of Operations (Experiment Stages)
+
+A sequence diagram helps understand the order of data processing, training, and evaluation steps.
+
+```mermaid
+sequenceDiagram
+    participant Data as Data Loading
+    participant Feat as Feature Extraction
+    participant Train as Training
+    participant Eval as Evaluation
+
+    Data->>Feat: Load queries, docs, qrels
+    Feat->>Feat: Compute BM25 + extra features
+    Feat->>Train: Create query-doc vectors
+    Train->>Train: Fit CatBoost / LightGBM
+    Train->>Eval: Predict on test set
+    Eval->>Eval: Calculate NDCG@10
+    Eval-->>Data: Compare with baseline
+```
+
+> *This diagram highlights the iterative comparison between the BM25 baseline and the learned ranker.*
+
+---
+
+### 3. Data Composition of MIRAGE (Question Sources)
+
+The MIRAGE dataset contains questions from three different origins. We use stratified splitting to preserve this distribution.
+
+```mermaid
+pie showData
+    "popqa" : 3024
+    "triviaqa" : 3024
+    "webquestions" : 1512
+```
+
+> *The pie chart shows the number of questions from each source in MIRAGE (total 7,560). Stratified splitting ensures each train/test subset maintains these proportions.*
+
+---
+
+### 4. Approximate Experiment Timeline (Gantt Chart)
+
+The Gantt chart provides a rough estimate of the computational cost for each major step (in minutes).
+
+```mermaid
+gantt
+    title Experiment Timeline (approx.)
+    dateFormat  X
+    axisFormat %s min
+    
+    section Data prep
+    Load & tokenize WikiIR : 0, 5
+    Load MIRAGE JSON     : 0, 2
+    
+    section Feature extraction
+    BM25 on WikiIR   : 5, 10
+    MIRAGE features  : 2, 8
+    
+    section Training
+    CatBoost (WikiIR) : 15, 25
+    CatBoost (MIRAGE) : 10, 20
+    
+    section Evaluation
+    NDCG computation  : 25, 28
+```
+
+> *Note: Timings are indicative on a typical laptop (CPU only). API‑based feature collection for MIRAGE may take significantly longer.*
+
+---
+
+### 5. Data Model for Learning to Rank (Class Diagram)
+
+This class diagram outlines the core data structures used in the implementation.
+
+```mermaid
+classDiagram
+    class Query {
+        +string qid
+        +string text
+        +string source
+    }
+    class Document {
+        +string doc_id
+        +string text
+    }
+    class Qrel {
+        +string qid
+        +string doc_id
+        +int relevance
+    }
+    class FeatureVector {
+        +float bm25_score
+        +int query_len
+        +int doc_len
+        +int common_words
+        +int min_dist
+        +float tf_mean
+        +int pageviews
+        +int backlinks
+    }
+    Query "1" -- "*" Qrel
+    Document "1" -- "*" Qrel
+    Query "1" -- "*" FeatureVector
+    Document "1" -- "*" FeatureVector
+```
+
+> *This diagram shows how queries and documents are linked via relevance judgments (qrels), and each query‑document pair is transformed into a feature vector for training.*
+
+
 
 ## 🚀 How to Reproduce
 
